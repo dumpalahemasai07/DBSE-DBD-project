@@ -1,1 +1,1 @@
-🛠️🏠 Local Ease – Smart Home & Local Services Platform
+ Local Ease – Smart Home & Local Services Platform
