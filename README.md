@@ -1,1 +1,1 @@
-# DBSE-DBD-project
+🛠️🏠 Local Ease – Smart Home & Local Services Platform
