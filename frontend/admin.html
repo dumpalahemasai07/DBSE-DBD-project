@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f1f5f9; }
+    .admin-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .admin-sidebar { background: #0f172a; color: white; padding: 2rem 1.5rem; }
+    .admin-sidebar h1 { margin-bottom: 2rem; color: white; font-size: 1.4rem; }
+    .admin-sidebar ul { list-style: none; }
+    .admin-sidebar li { padding: 0.8rem 1rem; cursor: pointer; border-radius: var(--radius-md); font-weight: 600; color: #94a3b8; margin-bottom: 0.5rem; transition: var(--transition); }
+    .admin-sidebar li:hover, .admin-sidebar li.active { background: #1e293b; color: #6366f1; }
+    .admin-content { padding: 2.5rem; overflow-y: auto; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .kpi-card { background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+    .kpi-card span { font-size: 0.85rem; color: var(--text-medium); font-weight: 600; }
+    .kpi-card h3 { font-size: 1.75rem; font-weight: 800; margin-top: 0.25rem; color: var(--text-dark); }
+
+    .admin-table-container { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: hidden; box-shadow: var(--shadow-sm); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    th { background: #f8fafc; font-weight: 700; color: var(--text-dark); }
+    
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <h1 class="logo">Home<span>Ease</span> Admin</h1>
+      <ul>
+        <li class="active" onclick="switchAdminTab('view-overview', this)">📊 KPI Overview</li>
+        <li onclick="switchAdminTab('view-bookings', this)">📑 Bookings Management</li>
+        <li onclick="switchAdminTab('view-services', this)">🛠 Service Catalog CRUD</li>
+        <li onclick="switchAdminTab('view-users', this)">👥 Users & Pros Roles</li>
+        <li onclick="logout()" style="color:#ef4444; margin-top:2rem;">🚪 Logout</li>
+      </ul>
+    </aside>
+
+    <main class="admin-content">
+      <!-- KPI Overview Tab -->
+      <div id="view-overview" class="tab-section active">
+        <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem;">Dashboard Overview</h2>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span>Total Revenue</span>
+            <h3 id="kpi-revenue">₹0</h3>
+          </div>
+          <div class="kpi-card">
+            <span>Total Bookings</span>
+            <h3 id="kpi-bookings">0</h3>
+          </div>
+          <div class="kpi-card">
+            <span>Registered Customers</span>
+            <h3 id="kpi-customers">0</h3>
+          </div>
+          <div class="kpi-card">
+            <span>Service Professionals</span>
+            <h3 id="kpi-pros">0</h3>
+          </div>
+          <div class="kpi-card">
+            <span>Catalog Services</span>
+            <h3 id="kpi-services">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bookings Management Tab -->
+      <div id="view-bookings" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 800;">Bookings Management</h2>
+          <button class="btn btn-outline-sm" onclick="fetchAdminBookings()">Refresh</button>
+        </div>
+        <div class="admin-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Schedule</th>
+                <th>Address</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Assign Professional</th>
+              </tr>
+            </thead>
+            <tbody id="admin-bookings-tbody">
+              <tr><td colspan="7">Loading bookings...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Service Catalog CRUD Tab -->
+      <div id="view-services" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 800;">Services Catalog</h2>
+          <button class="btn btn-primary-sm" onclick="openAddServiceModal()">+ Add New Service</button>
+        </div>
+        <div class="admin-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Tag</th>
+                <th>Rating</th>
+                <th>Variants Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-services-tbody">
+              <tr><td colspan="7">Loading services...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- User & Role Management Tab -->
+      <div id="view-users" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 800;">User & Professional Management</h2>
+          <button class="btn btn-outline-sm" onclick="fetchUsers()">Refresh Users</button>
+        </div>
+        <div class="admin-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Current Role</th>
+                <th>Change Role</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody">
+              <tr><td colspan="5">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Service Modal -->
+  <div class="modal-overlay" id="add-service-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add New Service</h3>
+        <button class="close-modal-btn" onclick="closeAddServiceModal()">&times;</button>
+      </div>
+      <form id="add-service-form" onsubmit="handleCreateService(event)">
+        <div class="form-group">
+          <label>Service Name</label>
+          <input type="text" id="srv-name" placeholder="e.g. Sofa Cleaning" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="srv-cat" placeholder="e.g. Cleaning, Beauty, Appliance" required>
+          </div>
+          <div class="form-group">
+            <label>Tag (Optional)</label>
+            <input type="text" id="srv-tag" placeholder="e.g. Most Booked">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="srv-desc" rows="3" placeholder="Service description..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" id="srv-img" placeholder="https://images.unsplash.com/..." required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Variant Title</label>
+            <input type="text" id="srv-var-title" placeholder="e.g. Standard Service" required>
+          </div>
+          <div class="form-group">
+            <label>Variant Price (₹)</label>
+            <input type="number" id="srv-var-price" placeholder="599" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Create Service</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

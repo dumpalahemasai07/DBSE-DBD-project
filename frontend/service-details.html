@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Details | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .details-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2.5rem;
+      margin-top: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .service-main-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-img-box {
+      width: 100%;
+      height: 320px;
+      position: relative;
+    }
+
+    .hero-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .details-content {
+      padding: 2rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+      padding: 1.5rem;
+      background: var(--bg-light);
+      border-radius: var(--radius-md);
+    }
+
+    .feature-box h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-box ul {
+      list-style: none;
+    }
+
+    .feature-box li {
+      font-size: 0.875rem;
+      color: var(--text-medium);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .variants-card {
+      background: var(--bg-white);
+      padding: 1.75rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 90px;
+    }
+
+    .reviews-section {
+      margin-top: 2.5rem;
+      padding: 2rem;
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .review-item {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .review-item:last-child { border-bottom: none; }
+    
+    .star-rating-input {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 850px) {
+      .details-layout { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        
+        <div class="location-pill" title="Click to Change Service Location" onclick="openLocationModal()" style="cursor:pointer;">
+          <span>📍</span>
+          <span class="loc-text current-loc-display">Jubilee Hills, Hyderabad</span>
+          <span>▾</span>
+        </div>
+      </div>
+      
+      <div class="header-center">
+        <div class="top-search" style="position:relative;">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search services..." autocomplete="off">
+          <div id="search-suggestions-dropdown" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow-md); z-index:100; max-height:220px; overflow-y:auto; display:none; margin-top:0.25rem;"></div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="services.html">All Services</a>
+          <span id="nav-login"></span>
+          <a href="cart.html" class="cart-icon-wrapper" id="cart-icon" title="View Cart">
+            🛒 <span id="cart-badge">0</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container details-layout" id="details-container">
+    <div style="grid-column: 1/-1; text-align:center; padding: 4rem;">Loading service details...</div>
+  </main>
+
+  <!-- Sticky Bottom Cart Banner -->
+  <div class="bottom-cart-banner" id="bottom-cart-banner">
+    <div class="container cart-banner-container">
+      <div class="cart-summary">
+        <span class="cart-total-price" id="cart-total-price">₹0</span>
+        <span class="cart-total-items" id="cart-total-items">0 items in cart</span>
+      </div>
+      <button class="btn btn-primary" onclick="window.location.href='cart.html'">View Cart & Checkout →</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        <p style="margin-top:0.75rem; color: var(--text-medium); font-size: 0.9rem;">
+          Your trusted partner for home services.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="index.html">Home</a>
+        <a href="services.html">All Services</a>
+        <a href="bookings.html">My Bookings</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/cartStore.js"></script>
+  <script>
+    let currentService = null;
+    let currentServiceReviews = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const serviceId = urlParams.get('id');
+      const targetPackage = urlParams.get('package') ? decodeURIComponent(urlParams.get('package')) : null;
+
+      if (!serviceId) {
+        window.location.href = 'services.html';
+        return;
+      }
+
+      await fetchServiceDetails(serviceId, targetPackage);
+      await fetchReviews(serviceId);
+      updateCartUI();
+    });
+
+    async function fetchServiceDetails(id, targetPackage) {
+      const container = document.getElementById('details-container');
+      try {
+        const res = await apiFetch(`/services/${id}`);
+        if (res.success && res.data) {
+          currentService = res.data;
+          trackRecentlyViewed(currentService);
+
+          if (targetPackage && currentService.variants && currentService.variants.length > 0) {
+            const vIdx = currentService.variants.findIndex(v => v.title.toLowerCase() === targetPackage.toLowerCase() || targetPackage.toLowerCase().includes(v.title.toLowerCase()));
+            const matchedIdx = vIdx !== -1 ? vIdx : 0;
+            const variantId = `${currentService._id}_${matchedIdx}`;
+            if (!cart[variantId]) {
+              addToCart(currentService, matchedIdx);
+            }
+          }
+
+          renderServiceDetails(currentService);
+        } else {
+          container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 4rem;">Service not found.</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 4rem; color:red;">Failed to load service details.</div>`;
+      }
+    }
+
+    async function fetchReviews(id) {
+      try {
+        const res = await apiFetch(`/reviews/service/${id}`);
+        if (res.success) {
+          currentServiceReviews = res.data;
+          renderReviewsList(currentServiceReviews);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderServiceDetails(service) {
+      const container = document.getElementById('details-container');
+      
+      let includesLi = service.includes && service.includes.length > 0 
+        ? service.includes.map(inc => `<li><span style="color:var(--success-color);">✔</span> ${inc}</li>`).join('') 
+        : '<li>General inspection & service</li>';
+
+      let excludesLi = service.excludes && service.excludes.length > 0 
+        ? service.excludes.map(exc => `<li><span style="color:var(--danger-color);">✖</span> ${exc}</li>`).join('') 
+        : '<li>Parts replacement not included unless requested</li>';
+
+      let variantsHtml = '';
+      if (service.variants) {
+        service.variants.forEach((v, index) => {
+          const variantId = `${service._id}_${index}`;
+          const qty = cart[variantId] ? cart[variantId].quantity : 0;
+
+          let actionBtnHtml = qty === 0 
+            ? `<button class="add-btn" onclick="addToCart(currentService, ${index})">Add to Cart</button>`
+            : `<div class="qty-control">
+                <button class="qty-btn" onclick="updateQty('${service._id}', ${index}, -1)">-</button>
+                <span class="qty-val">${qty}</span>
+                <button class="qty-btn" onclick="updateQty('${service._id}', ${index}, 1)">+</button>
+               </div>`;
+
+          variantsHtml += `
+            <div class="variant-row" id="variant-row-${variantId}">
+              <div class="variant-info">
+                <span class="variant-title" style="font-size:0.95rem;">${v.title}</span>
+                <span class="variant-price" style="font-size:1rem;">₹${v.price}</span>
+                <span class="variant-time">⏱ Approx ${v.duration}</span>
+              </div>
+              <div class="variant-action" id="action-${variantId}">
+                ${actionBtnHtml}
+              </div>
+            </div>`;
+        });
+      }
+
+      container.innerHTML = `
+        <div class="service-main-card">
+          <div class="hero-img-box">
+            <img src="${service.imageUrl}" alt="${service.name}">
+            <div class="strip-rating" style="bottom:16px; left:16px; font-size:0.9rem; padding:0.3rem 0.75rem;">
+              ★ ${service.rating || '4.8'} (${service.reviewCount || '1.2K+'} Reviews)
+            </div>
+          </div>
+          <div class="details-content">
+            <span class="nav-role-badge pro" style="margin-bottom:0.5rem; display:inline-block;">${service.category}</span>
+            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${service.name}</h1>
+            <p style="color: var(--text-medium); line-height: 1.6; font-size: 1rem;">${service.description}</p>
+
+            <div class="feature-grid">
+              <div class="feature-box">
+                <h4 style="color:var(--success-color);">What's Included</h4>
+                <ul>${includesLi}</ul>
+              </div>
+              <div class="feature-box">
+                <h4 style="color:var(--danger-color);">What's Excluded</h4>
+                <ul>${excludesLi}</ul>
+              </div>
+            </div>
+
+            <div style="background:var(--accent-light); padding:1rem; border-radius:var(--radius-md); font-size:0.9rem;">
+              ℹ <strong>Inspection & Consultation Fee:</strong> ₹${service.consultationFee || 0} (Waived off if total order value exceeds ₹500).
+            </div>
+
+            <!-- Customer Reviews Section -->
+            <div class="reviews-section">
+              <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1rem;">Customer Ratings & Reviews</h3>
+              <div id="reviews-list">Loading customer feedback...</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="variants-card">
+            <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem;">Select Service Package</h3>
+            <div class="variants-container">
+              ${variantsHtml}
+            </div>
+            <button class="btn btn-primary btn-full" style="margin-top: 1.5rem;" onclick="window.location.href='cart.html'">Go to Checkout →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReviewsList(reviews) {
+      const container = document.getElementById('reviews-list');
+      if (!reviews || reviews.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-medium);">No reviews posted yet for this service. Be the first to review after your booking!</p>`;
+        return;
+      }
+
+      container.innerHTML = reviews.map(r => `
+        <div class="review-item">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+            <strong>${r.user ? r.user.name : 'Verified Customer'}</strong>
+            <span style="color:#f59e0b; font-weight:700;">${'★'.repeat(r.rating)} (${r.rating}/5)</span>
+          </div>
+          <p style="color:var(--text-medium); font-size:0.9rem;">"${r.comment}"</p>
+          <small style="color:var(--text-light); font-size:0.75rem;">${new Date(r.createdAt).toLocaleDateString()}</small>
+        </div>
+      `).join('');
+    }
+
+    function reRenderVariantAction(variantId) {
+      const actionContainers = document.querySelectorAll(`#action-${variantId}`);
+      const qty = cart[variantId] ? cart[variantId].quantity : 0;
+      const parts = variantId.split('_');
+      const vIndex = parts[1];
+
+      let actionBtnHtml = qty === 0 
+        ? `<button class="add-btn" onclick="addToCart(currentService, ${vIndex})">Add to Cart</button>`
+        : `<div class="qty-control">
+            <button class="qty-btn" onclick="updateQty('${parts[0]}', ${vIndex}, -1)">-</button>
+            <span class="qty-val">${qty}</span>
+            <button class="qty-btn" onclick="updateQty('${parts[0]}', ${vIndex}, 1)">+</button>
+           </div>`;
+
+      actionContainers.forEach(c => c.innerHTML = actionBtnHtml);
+    }
+
+    function updateCartUI() {
+      const totals = getCartTotals();
+      const badge = document.getElementById('cart-badge');
+      const bottomBanner = document.getElementById('bottom-cart-banner');
+
+      if (badge) badge.innerText = totals.totalItems;
+
+      if (bottomBanner) {
+        if (totals.totalItems > 0) {
+          document.getElementById('cart-total-price').innerText = formatCurrency(totals.grandTotal);
+          document.getElementById('cart-total-items').innerText = `${totals.totalItems} item${totals.totalItems > 1 ? 's' : ''} in cart`;
+          bottomBanner.classList.add('active');
+        } else {
+          bottomBanner.classList.remove('active');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

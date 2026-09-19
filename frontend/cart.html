@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .cart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .cart-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.5rem;
+    }
+
+    .cart-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .cart-item-row:last-child { border-bottom: none; }
+
+    .cart-item-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .cart-item-img {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+    }
+
+    .address-card-option {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      transition: var(--transition);
+    }
+
+    .address-card-option.selected {
+      border-color: var(--accent-color);
+      background-color: var(--accent-light);
+    }
+
+    .bill-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      color: var(--text-medium);
+      font-size: 0.9rem;
+    }
+
+    .bill-row.total {
+      border-top: 1px solid var(--border-color);
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--text-dark);
+    }
+
+    @media (max-width: 850px) {
+      .cart-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="services.html">All Services</a>
+          <span id="nav-login"></span>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container cart-grid">
+    <div>
+      <!-- Cart Items Card -->
+      <div class="cart-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h2 style="font-size: 1.4rem; font-weight: 800;">My Cart (<span id="cart-item-count">0</span> items)</h2>
+          <button class="btn btn-outline-sm" onclick="clearCart(); renderCartPage();">Clear Cart</button>
+        </div>
+        <div id="cart-items-container">
+          Loading cart items...
+        </div>
+      </div>
+
+      <!-- Schedule Selector Card -->
+      <div class="cart-card">
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Select Date & Time Slot</h3>
+        <p style="font-size: 0.85rem; color: var(--text-medium); margin-bottom: 1rem;">Choose any 24-hour time slot (00:00 to 23:30). Slots that have already passed for today are automatically disabled.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label for="cart-date">Preferred Date</label>
+            <input type="date" id="cart-date" required>
+          </div>
+          <div class="form-group">
+            <label for="cart-time">Preferred Time Slot (24-Hour)</label>
+            <select id="cart-time" required style="font-weight: 600; font-family: monospace; font-size: 0.95rem;">
+              <option value="">Loading 24-hour time slots...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Address Selector Card -->
+      <div class="cart-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3 style="font-size: 1.2rem; font-weight: 700;">Service Address</h3>
+          <button class="btn btn-primary-sm" onclick="showNewAddressModal()">+ Add New Address</button>
+        </div>
+        <div id="address-options-list">
+          Loading saved addresses...
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Order Summary -->
+    <div>
+      <div class="cart-card" style="position: sticky; top: 90px;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem;">Payment Summary</h3>
+        
+        <!-- Promo Coupon -->
+        <div class="form-group" style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+          <input type="text" id="promo-input" placeholder="Promo code (e.g. EASE20)" style="text-transform:uppercase;">
+          <button class="btn btn-outline" style="padding:0.4rem 0.9rem;" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promo-message" style="font-size:0.8rem; margin-top:-1rem; margin-bottom:1rem;"></div>
+
+        <div class="bill-row">
+          <span>Items Subtotal</span>
+          <span id="bill-subtotal">₹0</span>
+        </div>
+        <div class="bill-row">
+          <span>Consultation & Visit Fee</span>
+          <span id="bill-consult">₹0</span>
+        </div>
+        <div class="bill-row">
+          <span>Taxes & Convenience Fee</span>
+          <span id="bill-taxes">₹0</span>
+        </div>
+        <div class="bill-row" id="discount-row" style="display:none; color:var(--success-color);">
+          <span>Promo Discount</span>
+          <span id="bill-discount">-₹0</span>
+        </div>
+        <div class="bill-row total">
+          <span>Grand Total</span>
+          <span id="bill-total">₹0</span>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="checkout-btn" style="margin-top: 1.5rem;" onclick="proceedToCheckout()">
+          Proceed to Checkout →
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add New Address Modal -->
+  <div class="modal-overlay" id="address-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Service Address</h3>
+        <button class="close-modal-btn" onclick="closeNewAddressModal()">&times;</button>
+      </div>
+      <form id="address-form" onsubmit="handleSaveAddress(event)">
+        <div class="form-group">
+          <label>Address Tag</label>
+          <select id="addr-tag">
+            <option value="Home">Home</option>
+            <option value="Work">Work</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Flat / House No. / Street</label>
+          <input type="text" id="addr-street" placeholder="e.g. Flat 402, Sunshine Apartments, Jubilee Hills" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" id="addr-city" value="Hyderabad" required>
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" id="addr-state" value="Telangana" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Zip / Pincode</label>
+          <input type="text" id="addr-zip" placeholder="500033" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Address</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        <p style="margin-top:0.75rem; color: var(--text-medium); font-size: 0.9rem;">
+          Your trusted partner for home services.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/cartStore.js"></script>
+  <script>
+    let selectedAddressString = '';
+    let appliedDiscount = 0;
+
+    function init24hSchedulePicker(datePickerId, timeSelectId) {
+      const dateEl = document.getElementById(datePickerId);
+      const timeEl = document.getElementById(timeSelectId);
+      if (!dateEl || !timeEl) return;
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      dateEl.min = todayStr;
+
+      if (!dateEl.value) {
+        dateEl.value = todayStr;
+      }
+
+      function updateSlots() {
+        const selectedDate = dateEl.value;
+        const isToday = (selectedDate === todayStr);
+
+        const currentHH = now.getHours();
+        const currentMM = now.getMinutes();
+
+        let html = '<option value="">Select Time (00:00 to 23:30)</option>';
+
+        for (let h = 0; h < 24; h++) {
+          for (let m = 0; m < 60; m += 30) {
+            const hh = h.toString().padStart(2, '0');
+            const mm = m.toString().padStart(2, '0');
+            const slotStr = `${hh}:${mm}`;
+
+            let isDisabled = false;
+            if (isToday) {
+              if (h < currentHH || (h === currentHH && m <= currentMM)) {
+                isDisabled = true;
+              }
+            }
+
+            if (isDisabled) {
+              html += `<option value="${slotStr}" disabled style="color:#aaa;">${slotStr} (Passed)</option>`;
+            } else {
+              html += `<option value="${slotStr}">${slotStr}</option>`;
+            }
+          }
+        }
+
+        const prevValue = timeEl.value;
+        timeEl.innerHTML = html;
+
+        if (prevValue) {
+          const matchingOpt = Array.from(timeEl.options).find(o => o.value === prevValue && !o.disabled);
+          if (matchingOpt) {
+            timeEl.value = prevValue;
+          }
+        }
+      }
+
+      dateEl.addEventListener('change', updateSlots);
+      updateSlots();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      init24hSchedulePicker('cart-date', 'cart-time');
+      renderCartPage();
+      await loadSavedAddresses();
+    });
+
+    window.renderCartPage = function() {
+      const container = document.getElementById('cart-items-container');
+      const totals = getCartTotals();
+
+      document.getElementById('cart-item-count').innerText = totals.totalItems;
+
+      if (totals.totalItems === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 2.5rem;">
+          <p style="font-size:1.1rem; color:var(--text-medium); margin-bottom:1rem;">Your shopping cart is currently empty.</p>
+          <a href="services.html" class="btn btn-primary">Browse Services</a>
+        </div>`;
+        document.getElementById('checkout-btn').disabled = true;
+        updateBillSummary(totals);
+        return;
+      }
+
+      document.getElementById('checkout-btn').disabled = false;
+
+      let html = '';
+      Object.entries(cart).forEach(([variantId, item]) => {
+        const parts = variantId.split('_');
+        html += `
+          <div class="cart-item-row">
+            <div class="cart-item-left">
+              <img src="${item.service.imageUrl}" alt="${item.service.name}" class="cart-item-img">
+              <div>
+                <strong style="font-size:0.95rem; display:block;">${item.service.name}</strong>
+                <span style="font-size:0.8rem; color:var(--text-medium);">${item.variant.title}</span>
+                <div style="font-size:0.85rem; font-weight:700; color:var(--accent-color); margin-top:0.2rem;">
+                  ₹${item.variant.price}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <div class="qty-control">
+                <button class="qty-btn" onclick="updateQty('${parts[0]}', ${parts[1]}, -1)">-</button>
+                <span class="qty-val">${item.quantity}</span>
+                <button class="qty-btn" onclick="updateQty('${parts[0]}', ${parts[1]}, 1)">+</button>
+              </div>
+              <strong style="min-width:60px; text-align:right;">₹${item.variant.price * item.quantity}</strong>
+              <button style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-size:1.1rem;" onclick="removeFromCart('${variantId}')" title="Remove">🗑</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      updateBillSummary(totals);
+    };
+
+    function updateBillSummary(totals) {
+      document.getElementById('bill-subtotal').innerText = formatCurrency(totals.itemTotal);
+      document.getElementById('bill-consult').innerText = formatCurrency(totals.consultFee);
+      document.getElementById('bill-taxes').innerText = formatCurrency(totals.taxes);
+
+      const grandTotal = Math.max(0, totals.grandTotal - appliedDiscount);
+      document.getElementById('bill-total').innerText = formatCurrency(grandTotal);
+    }
+
+    async function loadSavedAddresses() {
+      const container = document.getElementById('address-options-list');
+      
+      if (!currentUser) {
+        container.innerHTML = `
+          <div style="padding:1rem; background:var(--bg-light); border-radius:var(--radius-md);">
+            <textarea id="guest-address" rows="3" placeholder="Enter full doorstep address details here..." style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit;"></textarea>
+          </div>`;
+        return;
+      }
+
+      try {
+        const res = await apiFetch('/auth/me');
+        if (res.success && res.data && res.data.addresses && res.data.addresses.length > 0) {
+          const addrs = res.data.addresses;
+          container.innerHTML = addrs.map((a, i) => {
+            const addrStr = `${a.street}, ${a.city}, ${a.state} - ${a.zip}`;
+            const isSelected = i === 0;
+            if (isSelected) selectedAddressString = addrStr;
+            return `
+              <div class="address-card-option ${isSelected ? 'selected' : ''}" onclick="selectAddress(this, '${addrStr.replace(/'/g, "\\'")}')">
+                <input type="radio" name="address_radio" ${isSelected ? 'checked' : ''}>
+                <div>
+                  <strong>🏷 ${a.tag || 'Home'}</strong>
+                  <p style="font-size:0.85rem; color:var(--text-medium); margin-top:0.2rem;">${addrStr}</p>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = `
+            <p style="font-size:0.85rem; color:var(--text-medium); margin-bottom:0.5rem;">No saved addresses found in your account.</p>
+            <textarea id="guest-address" rows="3" placeholder="Enter full address..." style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit;"></textarea>
+          `;
+        }
+      } catch (err) {
+        container.innerHTML = `<textarea id="guest-address" rows="3" placeholder="Enter full address..." style="width:100%; padding:0.6rem; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit;"></textarea>`;
+      }
+    }
+
+    function selectAddress(el, addrStr) {
+      document.querySelectorAll('.address-card-option').forEach(card => card.classList.remove('selected'));
+      el.classList.add('selected');
+      el.querySelector('input[type="radio"]').checked = true;
+      selectedAddressString = addrStr;
+    }
+
+    function showNewAddressModal() {
+      if (!currentUser) {
+        showToast('Please login to save addresses to your profile', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1200);
+        return;
+      }
+      document.getElementById('address-modal').classList.add('active');
+    }
+
+    function closeNewAddressModal() {
+      document.getElementById('address-modal').classList.remove('active');
+    }
+
+    async function handleSaveAddress(e) {
+      e.preventDefault();
+      const tag = document.getElementById('addr-tag').value;
+      const street = document.getElementById('addr-street').value;
+      const city = document.getElementById('addr-city').value;
+      const state = document.getElementById('addr-state').value;
+      const zip = document.getElementById('addr-zip').value;
+
+      try {
+        const res = await apiFetch('/auth/addresses', {
+          method: 'POST',
+          body: JSON.stringify({ tag, street, city, state, zip })
+        });
+        if (res.success) {
+          showToast('Address saved successfully!');
+          closeNewAddressModal();
+          await loadSavedAddresses();
+        } else {
+          showToast(res.error || 'Failed to save address', 'error');
+        }
+      } catch (err) {
+        showToast('Error saving address', 'error');
+      }
+    }
+
+    function applyPromo() {
+      const code = document.getElementById('promo-input').value.trim().toUpperCase();
+      const msg = document.getElementById('promo-message');
+      const discountRow = document.getElementById('discount-row');
+
+      if (code === 'EASE20' || code === 'WELCOME100') {
+        appliedDiscount = 100;
+        msg.innerHTML = '<span style="color:var(--success-color);">✔ ₹100 Discount coupon applied!</span>';
+        discountRow.style.display = 'flex';
+        document.getElementById('bill-discount').innerText = '-₹100';
+        updateBillSummary(getCartTotals());
+      } else {
+        appliedDiscount = 0;
+        msg.innerHTML = '<span style="color:var(--danger-color);">✖ Invalid or expired promo code. Try "EASE20"</span>';
+        discountRow.style.display = 'none';
+        updateBillSummary(getCartTotals());
+      }
+    }
+
+    function proceedToCheckout() {
+      const totals = getCartTotals();
+      if (totals.totalItems === 0) {
+        showToast('Your cart is empty', 'error');
+        return;
+      }
+
+      const date = document.getElementById('cart-date').value;
+      const timeSlot = document.getElementById('cart-time').value;
+
+      if (!date || !timeSlot) {
+        showToast('Please select preferred date and time slot', 'error');
+        return;
+      }
+
+      let finalAddress = selectedAddressString;
+      const guestAddrEl = document.getElementById('guest-address');
+      if (guestAddrEl && guestAddrEl.value.trim()) {
+        finalAddress = guestAddrEl.value.trim();
+      }
+
+      if (!finalAddress) {
+        showToast('Please select or enter a delivery address', 'error');
+        return;
+      }
+
+      // Save checkout context to localStorage for booking flow
+      localStorage.setItem('checkout_date', date);
+      localStorage.setItem('checkout_time', timeSlot);
+      localStorage.setItem('checkout_address', finalAddress);
+      localStorage.setItem('checkout_discount', appliedDiscount);
+
+      window.location.href = 'booking.html';
+    }
+  </script>
+</body>
+</html>

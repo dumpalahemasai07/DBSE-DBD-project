@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background-color: var(--bg-light); }
+    .auth-card {
+      max-width: 450px;
+      margin: 3.5rem auto;
+      padding: 2.5rem;
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+    </div>
+  </header>
+
+  <div class="auth-card">
+    <div style="text-align: center; margin-bottom: 1.75rem;">
+      <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--text-dark);">Create Your Account</h2>
+      <p style="color: var(--text-medium); font-size: 0.9rem; margin-top: 0.25rem;">Join HomeEase for doorstep home services</p>
+    </div>
+
+    <form id="register-form" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="John Doe" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="john@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="text" id="phone" placeholder="+91 98765 43210" required>
+      </div>
+
+      <div class="form-group">
+        <label for="role">I want to join as a:</label>
+        <select id="role">
+          <option value="customer">Customer (Book Services)</option>
+          <option value="professional">Service Professional / Provider</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Minimum 6 characters" required minlength="6">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="reg-btn">Create Account</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+      <p style="font-size: 0.9rem; color: var(--text-medium);">
+        Already have an account? <a href="login.html" style="color: var(--accent-color); font-weight: 700; text-decoration: none;">Sign In</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const role = document.getElementById('role').value;
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('reg-btn');
+
+      btn.disabled = true;
+      btn.innerText = 'Creating account...';
+
+      try {
+        const res = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, phone, role, password })
+        });
+
+        if (res.success && res.data) {
+          localStorage.setItem('token', res.data.token);
+          localStorage.setItem('user', JSON.stringify(res.data));
+          currentUser = res.data;
+
+          showToast('Account created successfully!', 'success');
+
+          setTimeout(() => {
+            if (res.data.role === 'professional') window.location.href = 'provider.html';
+            else window.location.href = 'index.html';
+          }, 800);
+        } else {
+          showToast(res.error || 'Registration failed', 'error');
+          btn.disabled = false;
+          btn.innerText = 'Create Account';
+        }
+      } catch (err) {
+        showToast('Network error during registration', 'error');
+        btn.disabled = false;
+        btn.innerText = 'Create Account';
+      }
+    }
+  </script>
+</body>
+</html>

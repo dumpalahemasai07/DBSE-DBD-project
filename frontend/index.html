@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HomeEase | Expert Home Services</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navigation Header -->
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        
+        <div class="location-pill" title="Click to Change Service Location" onclick="openLocationModal()" style="cursor:pointer;">
+          <span>📍</span>
+          <span class="loc-text current-loc-display">Jubilee Hills, Hyderabad</span>
+          <span>▾</span>
+        </div>
+      </div>
+      
+      <div class="header-center">
+        <div class="top-search" style="position:relative;">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search for 'AC Servicing', 'Sofa', 'Plumber'..." autocomplete="off">
+          <div id="search-suggestions-dropdown" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow-md); z-index:100; max-height:220px; overflow-y:auto; display:none; margin-top:0.25rem;"></div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="services.html">All Services</a>
+          <a href="services.html?category=Beauty">Beauty</a>
+          <a href="services.html?category=Cleaning">Cleaning</a>
+          <span id="nav-login"></span>
+          <a href="cart.html" class="cart-icon-wrapper" id="cart-icon" title="View Cart">
+            🛒 <span id="cart-badge">0</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="split-hero">
+    <div class="container split-hero-container">
+      <!-- Headline & Categories Grid -->
+      <div class="hero-left">
+        <h2 class="hero-headline">Home services at your doorstep</h2>
+        <div class="hero-categories">
+          <a href="services.html?category=Beauty" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=120&q=80" alt="Salon"></div>
+            <span>Women's Salon</span>
+          </a>
+          <a href="services.html?category=Beauty" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=120&q=80" alt="Grooming"></div>
+            <span>Men's Grooming</span>
+          </a>
+          <a href="services.html?category=Appliance" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=120&q=80" alt="AC"></div>
+            <span>AC & Appliance</span>
+          </a>
+          <a href="services.html?category=Cleaning" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&q=80" alt="Cleaning"></div>
+            <span>Cleaning</span>
+          </a>
+          <a href="services.html?category=Home%20Repairs" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=120&q=80" alt="Repairs"></div>
+            <span>Plumber & Repair</span>
+          </a>
+          <a href="services.html?category=Native" class="cat-item">
+            <div class="cat-icon-circle"><img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=120&q=80" alt="Native"></div>
+            <span>Native Water Purifiers</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Mosaic Banner -->
+      <div class="hero-right">
+        <div class="mosaic-grid">
+          <div class="mosaic-item item-main">
+            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80" alt="Salon Service">
+          </div>
+          <div class="mosaic-item item-top-right">
+            <img src="https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=300&q=80" alt="Cleaning">
+          </div>
+          <div class="mosaic-item item-bottom-right">
+            <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&q=80" alt="Appliance Repair">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Markers -->
+  <section class="trust-markers-section">
+    <div class="container trust-markers-container">
+      <div class="trust-badge">
+        <div class="trust-icon">⭐</div>
+        <div class="trust-text">
+          <strong>4.8+ Rating</strong>
+          <span>Based on 5M+ Verified Reviews</span>
+        </div>
+      </div>
+      <div class="trust-badge">
+        <div class="trust-icon">🛡️</div>
+        <div class="trust-text">
+          <strong>HomeEase Safe</strong>
+          <span>Verified & Background Checked Pros</span>
+        </div>
+      </div>
+      <div class="trust-badge">
+        <div class="trust-icon">💯</div>
+        <div class="trust-text">
+          <strong>100% Quality Assurance</strong>
+          <span>Transparent Pricing & Free Rework</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dynamic Service Strips -->
+  <main class="container" id="dynamic-sections-container">
+    <div style="text-align: center; padding: 4rem; color: var(--text-medium);">
+      Loading Premium Services...
+    </div>
+  </main>
+
+  <!-- Sticky Bottom Cart Banner -->
+  <div class="bottom-cart-banner" id="bottom-cart-banner">
+    <div class="container cart-banner-container">
+      <div class="cart-summary">
+        <span class="cart-total-price" id="cart-total-price">₹0</span>
+        <span class="cart-total-items" id="cart-total-items">0 items in cart</span>
+      </div>
+      <button class="btn btn-primary" onclick="window.location.href='cart.html'">View Cart & Checkout →</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        <p style="margin-top:0.75rem; color: var(--text-medium); font-size: 0.9rem;">
+          Your trusted partner for home cleaning, beauty, repairs, and maintenance.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="services.html?category=Beauty">Salon for Women</a>
+        <a href="services.html?category=Cleaning">Home Deep Cleaning</a>
+        <a href="services.html?category=Appliance">AC Repair & Service</a>
+        <a href="services.html?category=Home%20Repairs">Plumbing & Electrical</a>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="index.html">Home</a>
+        <a href="services.html">All Services</a>
+        <a href="bookings.html">My Bookings</a>
+        <a href="profile.html">My Account</a>
+      </div>
+      <div class="footer-col">
+        <h4>Partner with Us</h4>
+        <a href="register.html">Become a Service Professional</a>
+        <a href="login.html">Provider Portal Login</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/cartStore.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

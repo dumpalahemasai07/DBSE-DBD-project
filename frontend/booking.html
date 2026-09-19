@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout & Payment | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .checkout-step-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.5rem;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      color: white;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .payment-option-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: var(--transition);
+    }
+
+    .payment-option-card.selected {
+      border-color: var(--accent-color);
+      background-color: var(--accent-light);
+    }
+
+    .upi-flow-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .upi-flow-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .upi-flow-btn.active {
+      background: #e0e7ff;
+      border-color: #6366f1;
+      color: #4338ca;
+    }
+
+    @media (max-width: 850px) {
+      .checkout-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="cart.html">← Back to Cart</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container checkout-layout" id="checkout-main-container">
+    <div>
+      <!-- Step 1: Schedule Details -->
+      <div class="checkout-step-card">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <h2 style="font-size: 1.25rem; font-weight: 700;">Service Schedule</h2>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-light); padding:1rem; border-radius:var(--radius-md);">
+          <div>
+            <strong id="display-date">Select Date</strong>
+            <p style="font-size:0.85rem; color:var(--text-medium); margin-top:0.2rem;" id="display-time">Select Time Slot (24-Hour)</p>
+          </div>
+          <a href="cart.html" style="color:var(--accent-color); font-weight:600; font-size:0.85rem; text-decoration:none;">Change</a>
+        </div>
+      </div>
+
+      <!-- Step 2: Address Confirmation -->
+      <div class="checkout-step-card">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <h2 style="font-size: 1.25rem; font-weight: 700;">Service Location</h2>
+        </div>
+        <div style="background:var(--bg-light); padding:1rem; border-radius:var(--radius-md);">
+          <p style="font-size:0.95rem; font-weight:600;" id="display-address">Loading address...</p>
+        </div>
+      </div>
+
+      <!-- Step 3: Payment Method -->
+      <div class="checkout-step-card">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <h2 style="font-size: 1.25rem; font-weight: 700;">Select Payment Method</h2>
+        </div>
+
+        <div class="payment-option-card selected" onclick="selectPayment(this, 'RAZORPAY')">
+          <input type="radio" name="payment_method" value="RAZORPAY" checked>
+          <div>
+            <strong>💳 Pay with Razorpay</strong>
+            <p style="font-size:0.8rem; color:var(--text-medium);">Credit & Debit Cards, Net Banking & Wallets.</p>
+          </div>
+        </div>
+
+        <div class="payment-option-card" id="upi-option-card" onclick="selectPayment(this, 'UPI')">
+          <input type="radio" name="payment_method" value="UPI">
+          <div style="width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>📱 Pay with UPI</strong>
+              <span style="font-size:0.75rem; background:#f0fdf4; color:#166534; padding:0.2rem 0.5rem; border-radius:12px; font-weight:700;">Fast & Secure</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-medium); margin-top:0.2rem;">Fast & secure UPI payment</p>
+
+            <div id="upi-choices-container" style="display:none; margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed var(--border-color);">
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:0.6rem;">
+                <button type="button" class="upi-flow-btn active" id="upi-flow-qr-btn" onclick="setUpiSubFlow(event, 'qr')">
+                  ▣ Scan QR Code
+                </button>
+                <button type="button" class="upi-flow-btn" id="upi-flow-intent-btn" onclick="setUpiSubFlow(event, 'intent')">
+                  📲 Open UPI App
+                </button>
+              </div>
+              <p style="font-size:0.75rem; color:var(--text-medium); text-align:center;">
+                Supported: <strong>GPay • PhonePe • Paytm • BHIM • Other UPI Apps</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-option-card" onclick="selectPayment(this, 'COD')">
+          <input type="radio" name="payment_method" value="COD">
+          <div>
+            <strong>💵 Cash on Delivery / Pay After Service</strong>
+            <p style="font-size:0.8rem; color:var(--text-medium);">Pay directly to service professional upon job completion.</p>
+          </div>
+        </div>
+
+
+
+        <div id="payment-status-message" style="display:none; margin-top:1rem; padding:0.75rem; border-radius:var(--radius-sm); font-size:0.9rem;"></div>
+      </div>
+    </div>
+
+    <!-- Right Side: Order Summary -->
+    <div>
+      <div class="checkout-step-card" style="position: sticky; top: 90px;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem;">Booking Summary</h3>
+        <div id="booking-items-list" style="margin-bottom: 1.25rem;">
+          Loading items...
+        </div>
+
+        <div class="bill-row">
+          <span>Items Total</span>
+          <span id="summary-subtotal">₹0</span>
+        </div>
+        <div class="bill-row">
+          <span>Consultation Fee</span>
+          <span id="summary-consult">₹0</span>
+        </div>
+        <div class="bill-row">
+          <span>Taxes & Fee</span>
+          <span id="summary-taxes">₹0</span>
+        </div>
+        <div class="bill-row total">
+          <span>Grand Total</span>
+          <span id="summary-grandtotal">₹0</span>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="confirm-booking-btn" style="margin-top: 1.5rem;" onclick="handleConfirmBooking()">
+          Pay with Razorpay →
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cartStore.js"></script>
+  <script>
+    let checkoutDate = '';
+    let checkoutTime = '';
+    let checkoutAddress = '';
+    let selectedPaymentMethod = 'RAZORPAY';
+    let existingPendingBooking = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+
+      const totals = getCartTotals();
+      if (totals.totalItems === 0) {
+        showToast('Your cart is empty', 'error');
+        setTimeout(() => window.location.href = 'services.html', 1000);
+        return;
+      }
+
+      const now = new Date();
+      checkoutDate = localStorage.getItem('checkout_date') || now.toISOString().split('T')[0];
+      checkoutTime = localStorage.getItem('checkout_time') || '14:30';
+      checkoutAddress = localStorage.getItem('checkout_address') || 'Jubilee Hills, Hyderabad';
+
+      document.getElementById('display-date').innerText = `🗓 Date: ${checkoutDate}`;
+      document.getElementById('display-time').innerText = `⏱ Time Slot (24h): ${checkoutTime}`;
+      document.getElementById('display-address').innerText = `📍 ${checkoutAddress}`;
+
+      renderSummaryItems(totals);
+    });
+
+    let currentGrandTotal = 0;
+    let selectedUpiFlow = 'qr';
+
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    }
+
+    function renderSummaryItems(totals) {
+      const container = document.getElementById('booking-items-list');
+      let html = '';
+      Object.values(cart).forEach(item => {
+        html += `
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; font-size:0.875rem;">
+            <span>${item.quantity}x ${item.service.name} (${item.variant.title})</span>
+            <strong>₹${item.variant.price * item.quantity}</strong>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+
+      const discount = Number(localStorage.getItem('checkout_discount') || 0);
+      currentGrandTotal = Math.max(0, totals.grandTotal - discount);
+
+      document.getElementById('summary-subtotal').innerText = formatCurrency(totals.itemTotal);
+      document.getElementById('summary-consult').innerText = formatCurrency(totals.consultFee);
+      document.getElementById('summary-taxes').innerText = formatCurrency(totals.taxes);
+      document.getElementById('summary-grandtotal').innerText = formatCurrency(currentGrandTotal);
+
+      if (!selectedUpiFlow) {
+        selectedUpiFlow = isMobileDevice() ? 'intent' : 'qr';
+      }
+      updateConfirmButtonLabel();
+    }
+
+    function selectPayment(el, method) {
+      document.querySelectorAll('.payment-option-card').forEach(card => card.classList.remove('selected'));
+      el.classList.add('selected');
+      el.querySelector('input[type="radio"]').checked = true;
+      selectedPaymentMethod = method;
+
+      const upiChoices = document.getElementById('upi-choices-container');
+      if (method === 'UPI') {
+        if (upiChoices) upiChoices.style.display = 'block';
+        if (!selectedUpiFlow) {
+          selectedUpiFlow = isMobileDevice() ? 'intent' : 'qr';
+        }
+        updateUpiFlowButtons();
+      } else {
+        if (upiChoices) upiChoices.style.display = 'none';
+        updateConfirmButtonLabel();
+      }
+    }
+
+    function setUpiSubFlow(e, flow) {
+      if (e) e.stopPropagation();
+      selectedUpiFlow = flow;
+      updateUpiFlowButtons();
+    }
+
+    function updateUpiFlowButtons() {
+      const qrBtn = document.getElementById('upi-flow-qr-btn');
+      const intentBtn = document.getElementById('upi-flow-intent-btn');
+      if (qrBtn && intentBtn) {
+        if (selectedUpiFlow === 'qr') {
+          qrBtn.classList.add('active');
+          intentBtn.classList.remove('active');
+        } else {
+          intentBtn.classList.add('active');
+          qrBtn.classList.remove('active');
+        }
+      }
+      updateConfirmButtonLabel();
+    }
+
+    function updateConfirmButtonLabel() {
+      const confirmBtn = document.getElementById('confirm-booking-btn');
+      if (!confirmBtn) return;
+
+      if (selectedPaymentMethod === 'UPI') {
+        if (selectedUpiFlow === 'intent') {
+          confirmBtn.innerText = existingPendingBooking ? `Try Payment Again (₹${currentGrandTotal}) →` : `Open UPI App & Pay ₹${currentGrandTotal} →`;
+        } else {
+          confirmBtn.innerText = existingPendingBooking ? `Try Payment Again (₹${currentGrandTotal}) →` : `Scan QR & Pay ₹${currentGrandTotal} →`;
+        }
+      } else if (selectedPaymentMethod === 'RAZORPAY') {
+        confirmBtn.innerText = existingPendingBooking ? `Try Payment Again (₹${currentGrandTotal}) →` : `Pay ₹${currentGrandTotal} with Cards / NetBanking →`;
+      } else {
+        confirmBtn.innerText = 'Place Booking (Cash on Delivery) →';
+      }
+    }
+
+
+
+    function showConfirmationScreen(bookingDoc, paymentId) {
+      const mainContainer = document.getElementById('checkout-main-container');
+      const itemsText = (bookingDoc.items || []).map(i => `${i.quantity}x ${i.name} (${i.packageName})`).join(', ');
+
+      mainContainer.innerHTML = `
+        <div style="grid-column: 1 / -1; max-width: 650px; margin: 2rem auto; width: 100%;">
+          <div class="checkout-step-card" style="text-align: center; padding: 2.5rem; background: #f0fdf4; border: 2px solid var(--success-color);">
+            <div style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--success-color);">✓</div>
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #166534; margin-bottom: 0.5rem;">Booking Confirmed!</h2>
+            <p style="color: #15803d; font-weight: 600; margin-bottom: 1.5rem;">Your home service has been scheduled successfully.</p>
+            
+            <div style="background: white; border-radius: var(--radius-md); padding: 1.5rem; text-align: left; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Booking ID</span>
+                <strong>#${bookingDoc.bookingNumber || bookingDoc._id.slice(-8)}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Service</span>
+                <strong>${itemsText}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Scheduled Date</span>
+                <strong>${bookingDoc.scheduledDate}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Scheduled Time (24-Hr)</span>
+                <strong>${bookingDoc.scheduledTime}</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Payment Method</span>
+                <strong>${selectedPaymentMethod === 'UPI' ? 'Razorpay UPI (GPay / PhonePe / QR)' : (selectedPaymentMethod === 'RAZORPAY' ? 'Razorpay (Cards / NetBanking / Wallets)' : 'Cash on Delivery')}</strong>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Payment Status</span>
+                <span class="status-badge ${selectedPaymentMethod === 'RAZORPAY' ? 'status-CONFIRMED' : 'status-Pending'}">${selectedPaymentMethod === 'RAZORPAY' ? 'PAID' : 'PENDING (COD)'}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                <span style="color:var(--text-medium);">Total Amount</span>
+                <strong style="color:var(--accent-color); font-size:1.15rem;">₹${bookingDoc.totalAmount}</strong>
+              </div>
+              ${paymentId ? `
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-medium);">Razorpay Payment ID</span>
+                <small style="font-family:monospace; font-weight:700; color:var(--text-dark);">${paymentId}</small>
+              </div>` : ''}
+            </div>
+
+            <div style="margin-top: 2rem; display:flex; gap: 1rem; justify-content: center;">
+              <a href="bookings.html" class="btn btn-primary">View My Bookings</a>
+              <a href="index.html" class="btn btn-outline">Back to Home</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleConfirmBooking() {
+      const confirmBtn = document.getElementById('confirm-booking-btn');
+      const statusMsg = document.getElementById('payment-status-message');
+      confirmBtn.disabled = true;
+
+      const totals = getCartTotals();
+      const discount = Number(localStorage.getItem('checkout_discount') || 0);
+      const grandTotal = Math.max(0, totals.grandTotal - discount);
+
+      const itemsPayload = Object.values(cart).map(c => ({
+        serviceId: c.service._id,
+        variantTitle: c.variant.title,
+        price: c.variant.price,
+        quantity: c.quantity
+      }));
+
+      try {
+        if (selectedPaymentMethod === 'RAZORPAY' || selectedPaymentMethod === 'UPI') {
+          confirmBtn.innerText = selectedPaymentMethod === 'UPI' ? (selectedUpiFlow === 'intent' ? 'Opening UPI App...' : 'Generating QR Code...') : 'Initializing Razorpay...';
+
+          let bookingDoc = existingPendingBooking;
+          if (!bookingDoc) {
+            // 1. Create pending booking doc first
+            const bRes = await apiFetch('/bookings', {
+              method: 'POST',
+              body: JSON.stringify({
+                items: itemsPayload,
+                cartTotal: totals.itemTotal,
+                consultationTotal: totals.consultFee,
+                grandTotal: grandTotal,
+                date: checkoutDate,
+                timeSlot: checkoutTime,
+                address: checkoutAddress,
+                paymentMethod: 'RAZORPAY'
+              })
+            });
+
+            if (!bRes.success || !bRes.data) {
+              showToast(bRes.error || 'Failed to create booking', 'error');
+              confirmBtn.disabled = false;
+              updateConfirmButtonLabel();
+              return;
+            }
+
+            bookingDoc = bRes.data;
+            existingPendingBooking = bookingDoc;
+          }
+
+          // 2. Create Razorpay Order on Backend
+          const orderRes = await apiFetch('/payments/create-order', {
+            method: 'POST',
+            body: JSON.stringify({ bookingId: bookingDoc._id, method: selectedPaymentMethod })
+          });
+
+          if (!orderRes.success) {
+            showToast(orderRes.error || 'Failed to initialize payment order', 'error');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = 'Try Payment Again →';
+            return;
+          }
+
+          // 3. Configure Razorpay Standard Checkout Popup based on selected UPI subflow or Cards/NetBanking
+          const displayConfig = selectedPaymentMethod === 'UPI' ? {
+            blocks: {
+              upi: {
+                name: selectedUpiFlow === 'intent' ? "Pay via UPI App (GPay / PhonePe / Paytm)" : "Scan & Pay via QR Code",
+                instruments: [
+                  { method: "upi", flows: [selectedUpiFlow] }
+                ]
+              }
+            },
+            sequence: ["block.upi"],
+            preferences: {
+              show_default_blocks: true
+            }
+          } : {
+            sequence: ["block.banks", "block.other"],
+            preferences: {
+              show_default_blocks: true
+            }
+          };
+
+          const options = {
+            key: orderRes.razorpayKeyId,
+            amount: orderRes.amount,
+            currency: orderRes.currency,
+            name: "HomeEase Services",
+            description: `Booking #${bookingDoc.bookingNumber}`,
+            image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&q=80",
+            order_id: orderRes.razorpayOrderId,
+            handler: async function (response) {
+              confirmBtn.innerText = 'Verifying Payment...';
+              
+              // 4. Server-Side HMAC Verification
+              const verifyRes = await apiFetch('/payments/verify', {
+                method: 'POST',
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  bookingId: bookingDoc._id,
+                  method: selectedPaymentMethod
+                })
+              });
+
+              if (verifyRes.success) {
+                clearCart();
+                localStorage.removeItem('checkout_date');
+                localStorage.removeItem('checkout_time');
+                localStorage.removeItem('checkout_address');
+                localStorage.removeItem('checkout_discount');
+
+                showToast('🎉 Payment Verified & Booking Confirmed!', 'success');
+                showConfirmationScreen(bookingDoc, response.razorpay_payment_id);
+              } else {
+                showToast(verifyRes.error || 'Payment verification failed', 'error');
+                statusMsg.style.display = 'block';
+                statusMsg.style.background = '#fef2f2';
+                statusMsg.style.color = '#991b1b';
+                statusMsg.innerText = 'Payment verification failed. Please try again.';
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = 'Try Payment Again →';
+              }
+            },
+            modal: {
+              ondismiss: function () {
+                showToast('Payment was not completed. You can try payment again.', 'info');
+                statusMsg.style.display = 'block';
+                statusMsg.style.background = '#fffbe6';
+                statusMsg.style.color = '#856404';
+                statusMsg.innerText = 'Payment was not completed.';
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = 'Try Payment Again →';
+              }
+            },
+            prefill: {
+              name: orderRes.customer ? orderRes.customer.name : '',
+              email: orderRes.customer ? orderRes.customer.email : '',
+              contact: orderRes.customer ? orderRes.customer.phone : '',
+              method: selectedPaymentMethod === 'UPI' ? 'upi' : ''
+            },
+            config: {
+              display: displayConfig
+            },
+            theme: {
+              color: "#4f46e5"
+            }
+          };
+
+
+          const rzp = new Razorpay(options);
+          rzp.on('payment.failed', function (response) {
+            showToast('Payment failed: ' + (response.error ? response.error.description : 'Transaction failed'), 'error');
+            statusMsg.style.display = 'block';
+            statusMsg.style.background = '#fef2f2';
+            statusMsg.style.color = '#991b1b';
+            statusMsg.innerText = 'Payment failed: ' + (response.error ? response.error.description : 'Transaction failed');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = 'Try Payment Again →';
+          });
+          rzp.open();
+
+        } else {
+          // Cash on Delivery
+          confirmBtn.innerText = 'Processing Order...';
+          const res = await apiFetch('/bookings', {
+            method: 'POST',
+            body: JSON.stringify({
+              items: itemsPayload,
+              cartTotal: totals.itemTotal,
+              consultationTotal: totals.consultFee,
+              grandTotal: grandTotal,
+              date: checkoutDate,
+              timeSlot: checkoutTime,
+              address: checkoutAddress,
+              paymentMethod: 'COD'
+            })
+          });
+
+          if (res.success && res.data) {
+            clearCart();
+            localStorage.removeItem('checkout_date');
+            localStorage.removeItem('checkout_time');
+            localStorage.removeItem('checkout_address');
+            localStorage.removeItem('checkout_discount');
+
+            showToast('🎉 Booking Confirmed (Cash on Delivery)!', 'success');
+            showConfirmationScreen(res.data, null);
+          } else {
+            showToast(res.error || 'Failed to place booking', 'error');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = 'Place Booking (Cash on Delivery) →';
+          }
+        }
+      } catch (err) {
+        showToast('Network error during booking creation', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = selectedPaymentMethod === 'RAZORPAY' ? 'Pay with Razorpay →' : 'Place Booking (Cash on Delivery) →';
+      }
+    }
+  </script>
+</body>
+</html>

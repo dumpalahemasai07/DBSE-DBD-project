@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Provider Dashboard | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f8fafc; }
+    .pro-header {
+      background: #0f172a;
+      color: white;
+      padding: 2rem 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .pro-header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin: 2rem 0;
+    }
+
+    .kpi-card-pro {
+      background: white;
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-card-pro span { font-size: 0.85rem; color: var(--text-medium); font-weight: 600; }
+    .kpi-card-pro h3 { font-size: 1.6rem; font-weight: 800; margin-top: 0.2rem; }
+
+    .job-card {
+      background: white;
+      padding: 1.75rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .job-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .job-actions {
+      margin-top: 1.25rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="pro-header">
+    <div class="container pro-header-container">
+      <div>
+        <a href="index.html" class="logo" style="color:white;">Home<span>Ease</span> Partner</a>
+        <p id="pro-name-display" style="color:#94a3b8; font-size:0.95rem; margin-top:0.25rem;">Welcome, Partner</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <span class="status-badge status-Confirmed" style="padding:0.4rem 0.9rem;">🟢 Available for Jobs</span>
+        <button onclick="logout()" class="btn btn-outline-sm" style="color:white; border-color:#334155;">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" style="padding-top: 2rem; padding-bottom: 4rem; max-width: 900px;">
+    <!-- Stats Row -->
+    <div class="kpi-row">
+      <div class="kpi-card-pro">
+        <span>Assigned Jobs</span>
+        <h3 id="pro-kpi-total">0</h3>
+      </div>
+      <div class="kpi-card-pro">
+        <span>In Progress</span>
+        <h3 id="pro-kpi-active">0</h3>
+      </div>
+      <div class="kpi-card-pro">
+        <span>Completed</span>
+        <h3 id="pro-kpi-completed">0</h3>
+      </div>
+      <div class="kpi-card-pro">
+        <span>Total Earnings</span>
+        <h3 id="pro-kpi-earnings">₹0</h3>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 800;">Assigned Service Requests</h2>
+      <button class="btn btn-outline-sm" onclick="fetchJobs()">Refresh List</button>
+    </div>
+
+    <div id="jobs-list">
+      Loading assigned jobs...
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span> Partner</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      requireRole('professional');
+      if (currentUser) {
+        document.getElementById('pro-name-display').innerText = `Welcome, ${currentUser.name} (${currentUser.email})`;
+      }
+      fetchJobs();
+    });
+
+    async function fetchJobs() {
+      const container = document.getElementById('jobs-list');
+      try {
+        const res = await apiFetch('/bookings');
+        if (res.success && res.data) {
+          const jobs = res.data;
+
+          let activeCount = 0;
+          let completedCount = 0;
+          let totalEarnings = 0;
+
+          jobs.forEach(j => {
+            if (j.status === 'COMPLETED') {
+              completedCount++;
+              totalEarnings += j.grandTotal || 0;
+            } else if (j.status !== 'CANCELLED') {
+              activeCount++;
+            }
+          });
+
+          document.getElementById('pro-kpi-total').innerText = jobs.length;
+          document.getElementById('pro-kpi-active').innerText = activeCount;
+          document.getElementById('pro-kpi-completed').innerText = completedCount;
+          document.getElementById('pro-kpi-earnings').innerText = formatCurrency(totalEarnings);
+
+          if (jobs.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:3rem; background:white; border-radius:var(--radius-lg); border:1px solid var(--border-color);">No jobs currently assigned to you.</div>`;
+            return;
+          }
+
+          container.innerHTML = jobs.map(job => {
+            const customerName = job.user ? job.user.name : 'Customer';
+            const customerEmail = job.user ? job.user.email : '';
+            const customerPhone = job.user ? (job.user.phone || 'N/A') : 'N/A';
+
+            return `
+              <div class="job-card">
+                <div class="job-card-header">
+                  <div>
+                    <h3 style="font-size:1.1rem; font-weight:700;">🗓 Scheduled: ${job.date} (${job.timeSlot})</h3>
+                    <small style="color:var(--text-light);">Booking ID: #${job._id.slice(-8)}</small>
+                  </div>
+                  <span class="status-badge status-${job.status}">${job.status.replace(/_/g, ' ')}</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; font-size:0.9rem; margin:1rem 0;">
+                  <div>
+                    <strong>Customer Contact:</strong>
+                    <p style="color:var(--text-medium); margin-top:0.2rem;">👤 ${customerName}</p>
+                    <p style="color:var(--text-medium);">📞 ${customerPhone}</p>
+                    <p style="color:var(--text-medium);">✉ ${customerEmail}</p>
+                  </div>
+
+                  <div>
+                    <strong>Doorstep Address:</strong>
+                    <p style="color:var(--text-medium); margin-top:0.2rem;">📍 ${job.address}</p>
+                    <p style="margin-top:0.4rem;"><strong>Payment Collectible:</strong> ${formatCurrency(job.grandTotal)}</p>
+                  </div>
+                </div>
+
+                <div style="background:var(--bg-light); padding:1rem; border-radius:var(--radius-md); margin-bottom:1rem; font-size:0.9rem;">
+                  <strong>Tasks to Perform:</strong>
+                  <ul style="margin-left:1.2rem; margin-top:0.3rem;">
+                    ${job.items.map(i => `<li><strong>${i.quantity}x</strong> ${i.variantTitle}</li>`).join('')}
+                  </ul>
+                </div>
+
+                <div class="job-actions">
+                  <label style="font-weight:600; font-size:0.9rem;">Update Job Status:</label>
+                  <select id="status-select-${job._id}" style="padding:0.45rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); font-family:inherit;">
+                    <option value="PROFESSIONAL_ASSIGNED" ${job.status === 'PROFESSIONAL_ASSIGNED' ? 'selected' : ''}>Assigned</option>
+                    <option value="ON_THE_WAY" ${job.status === 'ON_THE_WAY' ? 'selected' : ''}>On The Way to Location</option>
+                    <option value="SERVICE_STARTED" ${job.status === 'SERVICE_STARTED' ? 'selected' : ''}>Service Started</option>
+                    <option value="COMPLETED" ${job.status === 'COMPLETED' ? 'selected' : ''}>Service Completed</option>
+                  </select>
+                  <button class="btn btn-primary-sm" onclick="updateJobStatus('${job._id}')">Update Status</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = '<div style="text-align:center; padding:3rem; background:white; border-radius:var(--radius-lg); border:1px solid var(--border-color);">No jobs assigned.</div>';
+        }
+      } catch (err) {
+        container.innerHTML = '<div style="text-align:center; color:red; padding:3rem;">Failed to load jobs.</div>';
+      }
+    }
+
+    async function updateJobStatus(jobId) {
+      const status = document.getElementById(`status-select-${jobId}`).value;
+      try {
+        const res = await apiFetch(`/bookings/${jobId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ status })
+        });
+        if (res.success) {
+          showToast(`Job status updated to ${status.replace(/_/g, ' ')}!`, 'success');
+          fetchJobs();
+        } else {
+          showToast(res.error || 'Failed to update job status', 'error');
+        }
+      } catch (err) {
+        showToast('Error updating status', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

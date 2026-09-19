@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile & Saved Addresses | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+      margin-top: 2.5rem;
+      margin-bottom: 4rem;
+    }
+
+    .profile-sidebar {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu li {
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-medium);
+      margin-bottom: 0.5rem;
+      transition: var(--transition);
+    }
+
+    .sidebar-menu li:hover, .sidebar-menu li.active {
+      background: var(--accent-light);
+      color: var(--accent-color);
+    }
+
+    .profile-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .address-box {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 800px) {
+      .profile-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="services.html">All Services</a>
+          <a href="bookings.html">My Bookings</a>
+          <span id="nav-login"></span>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container profile-layout">
+    <aside class="profile-sidebar">
+      <div style="text-align:center; padding-bottom:1.5rem; border-bottom:1px solid var(--border-color); margin-bottom:1.25rem;">
+        <div style="width:60px; height:60px; border-radius:50%; background:var(--accent-color); color:white; font-size:1.5rem; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem auto;" id="avatar-initial">
+          U
+        </div>
+        <strong id="sidebar-user-name" style="display:block; font-size:1.05rem;">User Name</strong>
+        <span id="sidebar-user-role" class="status-badge status-Confirmed" style="margin-top:0.25rem;">Customer</span>
+      </div>
+
+        <ul class="sidebar-menu">
+        <li class="active" onclick="switchTab('tab-personal', this)">👤 Account Details</li>
+        <li onclick="switchTab('tab-addresses', this)">📍 Saved Addresses</li>
+        <li onclick="switchTab('tab-favorites', this)">♥ Favorite Services</li>
+        <li onclick="window.location.href='bookings.html'">📑 My Bookings</li>
+        <li onclick="logout()" style="color:var(--danger-color);">🚪 Logout</li>
+      </ul>
+    </aside>
+
+    <div class="profile-content">
+      <!-- Account Details Tab -->
+      <div id="tab-personal" class="tab-pane active profile-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem;">Personal Information</h2>
+        <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="prof-name" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="prof-email" disabled style="background:var(--bg-light); cursor:not-allowed;">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="prof-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label>Change Password (leave empty to keep current)</label>
+            <input type="password" id="prof-password" placeholder="New password...">
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+
+      <!-- Saved Addresses Tab -->
+      <div id="tab-addresses" class="tab-pane profile-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Saved Doorstep Addresses</h2>
+            <p style="font-size: 0.85rem; color: var(--text-medium); margin-top: 0.2rem;">Manage your saved Home, Work, and Other addresses.</p>
+          </div>
+          <button class="btn btn-primary-sm" onclick="showNewAddressModal()">+ Add New Address</button>
+        </div>
+        <div id="addresses-list-container">
+          Loading addresses...
+        </div>
+      </div>
+
+      <!-- Favorites Tab -->
+      <div id="tab-favorites" class="tab-pane profile-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem;">My Favorite Services</h2>
+        <div id="favorites-list-container">
+          Loading favorite services...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add / Edit Address Modal -->
+  <div class="modal-overlay" id="address-modal">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 id="address-modal-title">Add Service Address</h3>
+        <button class="close-modal-btn" onclick="closeAddressModal()">&times;</button>
+      </div>
+      <form id="address-form" onsubmit="handleSaveAddress(event)">
+        <input type="hidden" id="edit-address-id">
+        <div class="form-group">
+          <label>Address Label</label>
+          <select id="addr-tag">
+            <option value="Home">🏠 Home</option>
+            <option value="Work">💼 Work</option>
+            <option value="Other">📍 Other</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="position:relative;">
+          <label>🔍 Google Places / Locality Search</label>
+          <input type="text" id="addr-google-search" placeholder="Search area, locality or landmark (e.g. Jubilee Hills)..." oninput="handleAddressModalSearch(this.value)">
+          <div id="addr-search-results" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow-md); z-index:100; max-height:160px; overflow-y:auto; display:none;"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Flat / House / Door No.</label>
+            <input type="text" id="addr-house" placeholder="e.g. Flat 302" required>
+          </div>
+          <div class="form-group">
+            <label>Building / Apartment Name</label>
+            <input type="text" id="addr-building" placeholder="e.g. Sunshine Heights">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Street / Road / Lane</label>
+          <input type="text" id="addr-street" placeholder="e.g. Road No. 36" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Area / Locality</label>
+            <input type="text" id="addr-area" placeholder="e.g. Jubilee Hills" required>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" id="addr-city" value="Hyderabad" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" id="addr-state" value="Telangana" required>
+          </div>
+          <div class="form-group">
+            <label>Pincode / Zip</label>
+            <input type="text" id="addr-pincode" placeholder="500033" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Landmark (Optional)</label>
+          <input type="text" id="addr-landmark" placeholder="e.g. Near Checkpost Metro Station">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Contact Person Name</label>
+            <input type="text" id="addr-contact-name" placeholder="Name">
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="text" id="addr-contact-phone" placeholder="+91 98765 43210">
+          </div>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="checkbox" id="addr-is-default">
+          <label for="addr-is-default" style="margin:0; cursor:pointer;">Set as my default service address</label>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
+          <button type="submit" class="btn btn-primary" style="flex:1;">Save Address</button>
+          <button type="button" class="btn btn-outline" onclick="closeAddressModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    let userAddresses = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      requireAuth();
+      await loadProfileData();
+    });
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+
+      if (tabId === 'tab-favorites') {
+        loadFavorites();
+      }
+    }
+
+    async function loadProfileData() {
+      try {
+        const res = await apiFetch('/auth/me');
+        if (res.success && res.data) {
+          const user = res.data;
+          document.getElementById('avatar-initial').innerText = user.name.charAt(0).toUpperCase();
+          document.getElementById('sidebar-user-name').innerText = user.name;
+          document.getElementById('sidebar-user-role').innerText = user.role.toUpperCase();
+
+          document.getElementById('prof-name').value = user.name || '';
+          document.getElementById('prof-email').value = user.email || '';
+          document.getElementById('prof-phone').value = user.phone || '';
+
+          userAddresses = user.addresses || [];
+          renderAddresses(userAddresses);
+        }
+      } catch (err) {
+        showToast('Failed to load profile data', 'error');
+      }
+    }
+
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('prof-name').value;
+      const phone = document.getElementById('prof-phone').value;
+      const password = document.getElementById('prof-password').value;
+
+      try {
+        const res = await apiFetch('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ name, phone, password: password || undefined })
+        });
+        if (res.success) {
+          showToast('Profile updated successfully!', 'success');
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user) {
+            user.name = res.data.name;
+            user.phone = res.data.phone;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+          await loadProfileData();
+        } else {
+          showToast(res.error || 'Failed to update profile', 'error');
+        }
+      } catch (err) {
+        showToast('Error updating profile', 'error');
+      }
+    }
+
+    function renderAddresses(addrs) {
+      const container = document.getElementById('addresses-list-container');
+      if (!addrs || addrs.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-medium); padding:1rem 0;">No saved doorstep addresses yet. Click "+ Add New Address" to save one.</p>`;
+        return;
+      }
+
+      container.innerHTML = addrs.map(a => `
+        <div class="address-box">
+          <div>
+            <strong>${a.tag === 'Home' ? '🏠' : (a.tag === 'Work' ? '💼' : '📍')} ${a.tag || 'Home'} ${a.isDefault ? '<span class="status-badge status-Confirmed" style="margin-left:0.5rem;">Default</span>' : ''}</strong>
+            <p style="font-size:0.9rem; color:var(--text-medium); margin-top:0.3rem;">
+              ${a.house}${a.building ? ', ' + a.building : ''}, ${a.street}, ${a.area}, ${a.city} - ${a.pincode}
+            </p>
+            ${a.landmark ? `<p style="font-size:0.8rem; color:var(--text-light); margin-top:0.1rem;">Landmark: ${a.landmark}</p>` : ''}
+            ${a.contactName ? `<p style="font-size:0.8rem; color:var(--text-medium); margin-top:0.2rem;">Contact: ${a.contactName} (${a.contactPhone || 'N/A'})</p>` : ''}
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            ${!a.isDefault ? `<button class="btn btn-outline-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;" onclick="handleSetDefaultAddress('${a._id}')">Make Default</button>` : ''}
+            <button class="btn btn-outline-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;" onclick="openEditAddressModal('${a._id}')">Edit</button>
+            <button class="btn btn-danger" style="font-size:0.75rem; padding:0.25rem 0.5rem;" onclick="handleDeleteAddress('${a._id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showNewAddressModal() {
+      document.getElementById('edit-address-id').value = '';
+      document.getElementById('address-modal-title').innerText = 'Add Service Address';
+      document.getElementById('address-form').reset();
+      document.getElementById('addr-city').value = 'Hyderabad';
+      document.getElementById('addr-state').value = 'Telangana';
+      document.getElementById('address-modal').classList.add('active');
+    }
+
+    function openEditAddressModal(addressId) {
+      const addr = userAddresses.find(a => a._id === addressId);
+      if (!addr) return;
+
+      document.getElementById('edit-address-id').value = addr._id;
+      document.getElementById('address-modal-title').innerText = 'Edit Service Address';
+      document.getElementById('addr-tag').value = addr.tag || 'Home';
+      document.getElementById('addr-house').value = addr.house || '';
+      document.getElementById('addr-building').value = addr.building || '';
+      document.getElementById('addr-street').value = addr.street || '';
+      document.getElementById('addr-area').value = addr.area || '';
+      document.getElementById('addr-city').value = addr.city || 'Hyderabad';
+      document.getElementById('addr-state').value = addr.state || 'Telangana';
+      document.getElementById('addr-pincode').value = addr.pincode || addr.zip || '';
+      document.getElementById('addr-landmark').value = addr.landmark || '';
+      document.getElementById('addr-contact-name').value = addr.contactName || '';
+      document.getElementById('addr-contact-phone').value = addr.contactPhone || '';
+      document.getElementById('addr-is-default').checked = Boolean(addr.isDefault);
+
+      document.getElementById('address-modal').classList.add('active');
+    }
+
+    function closeAddressModal() {
+      document.getElementById('address-modal').classList.remove('active');
+    }
+
+    function handleAddressModalSearch(val) {
+      const container = document.getElementById('addr-search-results');
+      if (!val || val.trim().length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+      const matches = KNOWN_HYD_AREAS.filter(a => a.toLowerCase().includes(val.toLowerCase().trim()));
+      if (matches.length > 0) {
+        container.innerHTML = matches.map(m => {
+          const area = m.split(',')[0];
+          return `<div style="padding:0.5rem 0.8rem; cursor:pointer; font-size:0.85rem; border-bottom:1px solid #eee;" onclick="selectAddressSearchMatch('${area}')">${m}</div>`;
+        }).join('');
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    function selectAddressSearchMatch(area) {
+      document.getElementById('addr-area').value = area;
+      document.getElementById('addr-city').value = 'Hyderabad';
+      document.getElementById('addr-state').value = 'Telangana';
+      document.getElementById('addr-pincode').value = '500033';
+      document.getElementById('addr-search-results').style.display = 'none';
+    }
+
+    async function handleSaveAddress(e) {
+      e.preventDefault();
+      const editId = document.getElementById('edit-address-id').value;
+      const tag = document.getElementById('addr-tag').value;
+      const house = document.getElementById('addr-house').value;
+      const building = document.getElementById('addr-building').value;
+      const street = document.getElementById('addr-street').value;
+      const area = document.getElementById('addr-area').value;
+      const city = document.getElementById('addr-city').value;
+      const state = document.getElementById('addr-state').value;
+      const pincode = document.getElementById('addr-pincode').value;
+      const landmark = document.getElementById('addr-landmark').value;
+      const contactName = document.getElementById('addr-contact-name').value;
+      const contactPhone = document.getElementById('addr-contact-phone').value;
+      const isDefault = document.getElementById('addr-is-default').checked;
+
+      const payload = {
+        tag, house, building, street, area, city, state, pincode, landmark, contactName, contactPhone, isDefault
+      };
+
+      try {
+        const endpoint = editId ? `/auth/addresses/${editId}` : '/auth/addresses';
+        const method = editId ? 'PUT' : 'POST';
+
+        const res = await apiFetch(endpoint, {
+          method,
+          body: JSON.stringify(payload)
+        });
+        if (res.success) {
+          showToast(editId ? 'Address updated successfully!' : 'Address saved successfully!', 'success');
+          closeAddressModal();
+          await loadProfileData();
+        } else {
+          showToast(res.error || 'Failed to save address', 'error');
+        }
+      } catch (err) {
+        showToast('Error saving address', 'error');
+      }
+    }
+
+    async function handleSetDefaultAddress(addressId) {
+      try {
+        const res = await apiFetch(`/auth/addresses/${addressId}/default`, { method: 'PUT' });
+        if (res.success) {
+          showToast('Default address updated!', 'success');
+          await loadProfileData();
+        }
+      } catch (err) {
+        showToast('Error setting default address', 'error');
+      }
+    }
+
+    async function handleDeleteAddress(addressId) {
+      if (!confirm('Are you sure you want to delete this address? Existing historical bookings will not be affected.')) return;
+      try {
+        const res = await apiFetch(`/auth/addresses/${addressId}`, { method: 'DELETE' });
+        if (res.success) {
+          showToast('Address deleted');
+          await loadProfileData();
+        }
+      } catch (err) {
+        showToast('Error deleting address', 'error');
+      }
+    }
+
+    async function loadFavorites() {
+      const container = document.getElementById('favorites-list-container');
+      try {
+        const res = await apiFetch('/auth/favorites');
+        if (res.success && res.data && res.data.length > 0) {
+          container.innerHTML = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1.25rem;">
+            ${res.data.map(s => `
+              <div class="service-card" style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem; background:white;">
+                <img src="${s.imageUrl || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&q=80'}" style="width:100%; height:120px; object-fit:cover; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+                <strong style="font-size:0.95rem; display:block; margin-bottom:0.25rem;">${s.name}</strong>
+                <span style="font-size:0.8rem; color:var(--text-medium);">${s.category ? (s.category.name || s.category) : 'Service'}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+                  <strong style="color:var(--accent-color);">₹${s.startingPrice}</strong>
+                  <button class="btn btn-outline-sm" onclick="toggleFavorite('${s._id}', this); setTimeout(loadFavorites, 500);">♥ Favorited</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>`;
+        } else {
+          container.innerHTML = `<p style="color:var(--text-medium);">No favorite services saved yet. Click "♡ Favorite" on any service to save it here.</p>`;
+        }
+      } catch (e) {
+        container.innerHTML = `<p style="color:red;">Error loading favorite services.</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

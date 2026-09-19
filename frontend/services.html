@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse All Services | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: var(--bg-white);
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .category-pills {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .pill {
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .pill.active, .pill:hover {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+    
+    .sort-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.75rem;
+      margin-bottom: 4rem;
+    }
+
+    .service-card-full {
+      background: var(--bg-white);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
+    }
+
+    .service-card-full:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-banner {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .card-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cat-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--primary-color);
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Navbar -->
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        
+        <div class="location-pill" title="Click to Change Service Location" onclick="openLocationModal()" style="cursor:pointer;">
+          <span>📍</span>
+          <span class="loc-text current-loc-display">Jubilee Hills, Hyderabad</span>
+          <span>▾</span>
+        </div>
+      </div>
+      
+      <div class="header-center">
+        <div class="top-search" style="position:relative;">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search services..." autocomplete="off">
+          <div id="search-suggestions-dropdown" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border-color); border-radius:var(--radius-md); box-shadow:var(--shadow-md); z-index:100; max-height:220px; overflow-y:auto; display:none; margin-top:0.25rem;"></div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="services.html" style="color:var(--accent-color);">All Services</a>
+          <span id="nav-login"></span>
+          <a href="cart.html" class="cart-icon-wrapper" id="cart-icon" title="View Cart">
+            🛒 <span id="cart-badge">0</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 2rem;">
+    <h2 id="page-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem;">Explore All Services</h2>
+
+    <!-- Filter & Sort Bar -->
+    <div class="filter-bar">
+      <div class="category-pills" id="category-pills">
+        <span class="pill active" data-cat="">All</span>
+        <span class="pill" data-cat="Beauty">Beauty & Salon</span>
+        <span class="pill" data-cat="Cleaning">Cleaning</span>
+        <span class="pill" data-cat="Appliance">Appliance Repair</span>
+        <span class="pill" data-cat="Home Repairs">Home Repairs</span>
+        <span class="pill" data-cat="Native">Native Water Purifiers</span>
+      </div>
+
+      <div class="sort-control">
+        <label for="sort-select">Sort By:</label>
+        <select id="sort-select" style="padding: 0.4rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-family: inherit;">
+          <option value="">Recommended</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="rating_desc">Highest Rated</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div id="services-grid" class="services-grid">
+      <div style="text-align: center; grid-column: 1/-1; padding: 4rem;">Loading services...</div>
+    </div>
+  </main>
+
+  <!-- Sticky Bottom Cart Banner -->
+  <div class="bottom-cart-banner" id="bottom-cart-banner">
+    <div class="container cart-banner-container">
+      <div class="cart-summary">
+        <span class="cart-total-price" id="cart-total-price">₹0</span>
+        <span class="cart-total-items" id="cart-total-items">0 items in cart</span>
+      </div>
+      <button class="btn btn-primary" onclick="window.location.href='cart.html'">View Cart & Checkout →</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+        <p style="margin-top:0.75rem; color: var(--text-medium); font-size: 0.9rem;">
+          Your trusted partner for home services.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="index.html">Home</a>
+        <a href="services.html">All Services</a>
+        <a href="bookings.html">My Bookings</a>
+        <a href="profile.html">My Profile</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/cartStore.js"></script>
+  <script>
+    let fetchedServices = [];
+    let currentCategory = '';
+    let currentQuery = '';
+    let currentSort = '';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentQuery = urlParams.get('q') || '';
+      currentCategory = urlParams.get('category') || '';
+
+      const searchInput = document.getElementById('search-input');
+      if (currentQuery) {
+        searchInput.value = currentQuery;
+        document.getElementById('page-title').innerText = `Results for "${currentQuery}"`;
+      } else if (currentCategory) {
+        document.getElementById('page-title').innerText = `${currentCategory} Services`;
+        highlightCategoryPill(currentCategory);
+      }
+
+      await loadCategoryPills();
+      await loadServices();
+
+      // Listeners
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          currentQuery = e.target.value.trim();
+          document.getElementById('page-title').innerText = currentQuery ? `Results for "${currentQuery}"` : 'Explore All Services';
+          loadServices();
+        }
+      });
+
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        loadServices();
+      });
+
+      updateCartUI();
+    });
+
+    async function loadCategoryPills() {
+      const container = document.getElementById('category-pills');
+      try {
+        const res = await apiFetch('/categories');
+        if (res.success && res.data) {
+          let html = `<span class="pill ${!currentCategory ? 'active' : ''}" data-cat="">All</span>`;
+          res.data.forEach(cat => {
+            const isActive = currentCategory && currentCategory.toLowerCase() === cat.name.toLowerCase();
+            html += `<span class="pill ${isActive ? 'active' : ''}" data-cat="${cat.name}">${cat.icon || ''} ${cat.name}</span>`;
+          });
+          container.innerHTML = html;
+
+          container.querySelectorAll('.pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+              container.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+              pill.classList.add('active');
+              currentCategory = pill.dataset.cat;
+              document.getElementById('page-title').innerText = currentCategory ? `${currentCategory} Services` : 'Explore All Services';
+              loadServices();
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Error loading category pills:', err);
+      }
+    }
+
+    async function loadServices() {
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:3rem;">Loading services...</div>';
+
+      let endpoint = '/services?';
+      if (currentCategory) endpoint += `category=${encodeURIComponent(currentCategory)}&`;
+      if (currentQuery) endpoint += `q=${encodeURIComponent(currentQuery)}&`;
+      if (currentSort) endpoint += `sortBy=${encodeURIComponent(currentSort)}&`;
+
+      try {
+        const res = await apiFetch(endpoint);
+        if (res.success && res.data.length > 0) {
+          fetchedServices = res.data;
+          renderGrid(fetchedServices);
+        } else {
+          grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:3rem;">No services match your criteria.</div>';
+        }
+      } catch (e) {
+        grid.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:3rem; color:red;">Error fetching services.</div>';
+      }
+    }
+
+    function renderGrid(services) {
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = '';
+
+      services.forEach(service => {
+        const card = document.createElement('div');
+        card.className = 'service-card-full';
+
+        let variantsHtml = '';
+        if (service.variants) {
+          service.variants.forEach((v, index) => {
+            const variantId = `${service._id}_${index}`;
+            const qty = cart[variantId] ? cart[variantId].quantity : 0;
+
+            let actionBtnHtml = qty === 0 
+              ? `<button class="add-btn" onclick="addServiceToCart('${service._id}', ${index})">Add</button>`
+              : `<div class="qty-control">
+                  <button class="qty-btn" onclick="updateQty('${service._id}', ${index}, -1)">-</button>
+                  <span class="qty-val">${qty}</span>
+                  <button class="qty-btn" onclick="updateQty('${service._id}', ${index}, 1)">+</button>
+                 </div>`;
+
+            variantsHtml += `
+              <div class="variant-row" id="variant-row-${variantId}">
+                <div class="variant-info">
+                  <span class="variant-title">${v.title}</span>
+                  <span class="variant-price">₹${v.price}</span>
+                  <span class="variant-time">⏳ ${v.duration}</span>
+                </div>
+                <div class="variant-action" id="action-${variantId}">
+                  ${actionBtnHtml}
+                </div>
+              </div>`;
+          });
+        }
+
+        let includesHtml = '';
+        if (service.includes && service.includes.length > 0) {
+          includesHtml = `<div style="font-size:0.75rem; color:var(--text-medium); margin-bottom:0.75rem;">
+            ✔ ${service.includes.slice(0, 2).join(' • ')}
+          </div>`;
+        }
+
+        card.innerHTML = `
+          <div class="card-banner" onclick="window.location.href='service-details.html?id=${service._id}'">
+            <img src="${service.imageUrl}" alt="${service.name}" onerror="handleImgError(this)">
+            <span class="cat-tag">${service.category}</span>
+            <div class="strip-rating">★ ${service.rating || '4.8'} (${service.reviewCount || '1K+'})</div>
+          </div>
+          <div class="card-body">
+            <h3 style="font-size:1.15rem; font-weight:700; cursor:pointer;" onclick="window.location.href='service-details.html?id=${service._id}'">${service.name}</h3>
+            <p style="font-size:0.85rem; color:var(--text-medium); margin: 0.4rem 0 0.8rem 0;">${service.description}</p>
+            ${includesHtml}
+            <div class="variants-container">${variantsHtml}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function addServiceToCart(serviceId, variantIndex) {
+      const s = fetchedServices.find(item => item._id === serviceId);
+      if (s) {
+        addToCart(s, variantIndex);
+      }
+    }
+
+    function reRenderVariantAction(variantId) {
+      const actionContainers = document.querySelectorAll(`#action-${variantId}`);
+      const qty = cart[variantId] ? cart[variantId].quantity : 0;
+      
+      const parts = variantId.split('_');
+      const serviceId = parts[0];
+      const vIndex = parts[1];
+
+      let actionBtnHtml = qty === 0 
+        ? `<button class="add-btn" onclick="addServiceToCart('${serviceId}', ${vIndex})">Add</button>`
+        : `<div class="qty-control">
+            <button class="qty-btn" onclick="updateQty('${serviceId}', ${vIndex}, -1)">-</button>
+            <span class="qty-val">${qty}</span>
+            <button class="qty-btn" onclick="updateQty('${serviceId}', ${vIndex}, 1)">+</button>
+           </div>`;
+
+      actionContainers.forEach(container => {
+        container.innerHTML = actionBtnHtml;
+      });
+    }
+
+    function updateCartUI() {
+      const totals = getCartTotals();
+      const badge = document.getElementById('cart-badge');
+      const bottomBanner = document.getElementById('bottom-cart-banner');
+      
+      if (badge) badge.innerText = totals.totalItems;
+      
+      if (bottomBanner) {
+        if (totals.totalItems > 0) {
+          document.getElementById('cart-total-price').innerText = formatCurrency(totals.grandTotal);
+          document.getElementById('cart-total-items').innerText = `${totals.totalItems} item${totals.totalItems > 1 ? 's' : ''} in cart`;
+          bottomBanner.classList.add('active');
+        } else {
+          bottomBanner.classList.remove('active');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

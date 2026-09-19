@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings | HomeEase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .booking-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--border-color);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Timeline Stepper */
+    .timeline-stepper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      margin: 1.5rem 0 2rem 0;
+      padding: 0 1rem;
+    }
+
+    .timeline-stepper::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 2rem;
+      right: 2rem;
+      height: 3px;
+      background: var(--border-color);
+      z-index: 1;
+      transform: translateY(-50%);
+    }
+
+    .step-point {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-white);
+      padding: 0 0.5rem;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--border-color);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-point.completed .step-circle {
+      background: var(--success-color);
+    }
+
+    .step-point.active .step-circle {
+      background: var(--accent-color);
+      box-shadow: 0 0 0 4px var(--accent-light);
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-medium);
+    }
+
+    .booking-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <div class="header-left">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+      
+      <div class="header-right">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="services.html">All Services</a>
+          <span id="nav-login"></span>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 2.5rem; padding-bottom: 4rem; max-width: 900px;">
+    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem;">My Bookings History</h2>
+
+    <!-- Filter Tabs -->
+    <div class="tabs-bar">
+      <button class="pill active" onclick="filterBookings('ALL', this)">All Bookings</button>
+      <button class="pill" onclick="filterBookings('ACTIVE', this)">Active</button>
+      <button class="pill" onclick="filterBookings('COMPLETED', this)">Completed</button>
+      <button class="pill" onclick="filterBookings('CANCELLED', this)">Cancelled</button>
+    </div>
+
+    <div id="bookings-list-container">
+      Loading your bookings...
+    </div>
+  </main>
+
+  <!-- Reschedule Modal -->
+  <div class="modal-overlay" id="reschedule-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Reschedule Booking</h3>
+        <button class="close-modal-btn" onclick="closeRescheduleModal()">&times;</button>
+      </div>
+      <form id="reschedule-form" onsubmit="handleRescheduleSubmit(event)">
+        <input type="hidden" id="reschedule-booking-id">
+        <div class="form-group">
+          <label>Select New Date</label>
+          <input type="date" id="reschedule-date" required>
+        </div>
+        <div class="form-group">
+          <label>Select New Time Slot (24-Hour)</label>
+          <select id="reschedule-time" required style="font-weight: 600; font-family: monospace;">
+            <option value="">Loading 24-hour slots...</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Rescheduled Time</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="review-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Rate & Review Service</h3>
+        <button class="close-modal-btn" onclick="closeReviewModal()">&times;</button>
+      </div>
+      <form id="review-form" onsubmit="handleReviewSubmit(event)">
+        <input type="hidden" id="review-booking-id">
+        <div class="form-group">
+          <label>Rating (1 to 5 Stars)</label>
+          <select id="review-rating" required>
+            <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent</option>
+            <option value="4">⭐⭐⭐⭐ 4 - Very Good</option>
+            <option value="3">⭐⭐⭐ 3 - Average</option>
+            <option value="2">⭐⭐ 2 - Poor</option>
+            <option value="1">⭐ 1 - Terrible</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Feedback & Comments</label>
+          <textarea id="review-comment" rows="4" placeholder="Share your experience with the service professional..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Submit Review</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-col">
+        <a href="index.html" class="logo">Home<span>Ease</span></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    let myBookings = [];
+    let currentFilter = 'ALL';
+
+    function init24hSchedulePicker(datePickerId, timeSelectId) {
+      const dateEl = document.getElementById(datePickerId);
+      const timeEl = document.getElementById(timeSelectId);
+      if (!dateEl || !timeEl) return;
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      dateEl.min = todayStr;
+
+      if (!dateEl.value) {
+        dateEl.value = todayStr;
+      }
+
+      function updateSlots() {
+        const selectedDate = dateEl.value;
+        const isToday = (selectedDate === todayStr);
+
+        const currentHH = now.getHours();
+        const currentMM = now.getMinutes();
+
+        let html = '<option value="">Select Time Slot (00:00 to 23:30)</option>';
+
+        for (let h = 0; h < 24; h++) {
+          for (let m = 0; m < 60; m += 30) {
+            const hh = h.toString().padStart(2, '0');
+            const mm = m.toString().padStart(2, '0');
+            const slotStr = `${hh}:${mm}`;
+
+            let isDisabled = false;
+            if (isToday) {
+              if (h < currentHH || (h === currentHH && m <= currentMM)) {
+                isDisabled = true;
+              }
+            }
+
+            if (isDisabled) {
+              html += `<option value="${slotStr}" disabled style="color:#aaa;">${slotStr} (Passed)</option>`;
+            } else {
+              html += `<option value="${slotStr}">${slotStr}</option>`;
+            }
+          }
+        }
+
+        const prevValue = timeEl.value;
+        timeEl.innerHTML = html;
+
+        if (prevValue) {
+          const matchingOpt = Array.from(timeEl.options).find(o => o.value === prevValue && !o.disabled);
+          if (matchingOpt) {
+            timeEl.value = prevValue;
+          }
+        }
+      }
+
+      dateEl.addEventListener('change', updateSlots);
+      updateSlots();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      init24hSchedulePicker('reschedule-date', 'reschedule-time');
+      loadBookings();
+    });
+
+    async function loadBookings() {
+      const container = document.getElementById('bookings-list-container');
+      try {
+        const res = await apiFetch('/bookings');
+        if (res.success && res.data.length > 0) {
+          myBookings = res.data;
+          renderBookingsList();
+        } else {
+          container.innerHTML = `<div style="text-align:center; padding:3rem; background:white; border-radius:var(--radius-lg); border:1px solid var(--border-color);">
+            <p style="font-size:1.1rem; color:var(--text-medium); margin-bottom:1rem;">You have not made any bookings yet.</p>
+            <a href="services.html" class="btn btn-primary">Book Your First Service</a>
+          </div>`;
+        }
+      } catch (e) {
+        container.innerHTML = `<div style="text-align:center; color:red; padding:3rem;">Error loading bookings.</div>`;
+      }
+    }
+
+    function filterBookings(filter, btn) {
+      document.querySelectorAll('.tabs-bar .pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = filter;
+      renderBookingsList();
+    }
+
+    function renderBookingsList() {
+      const container = document.getElementById('bookings-list-container');
+      
+      let filtered = myBookings;
+      if (currentFilter === 'ACTIVE') {
+        filtered = myBookings.filter(b => b.status !== 'COMPLETED' && b.status !== 'CANCELLED');
+      } else if (currentFilter === 'COMPLETED') {
+        filtered = myBookings.filter(b => b.status === 'COMPLETED');
+      } else if (currentFilter === 'CANCELLED') {
+        filtered = myBookings.filter(b => b.status === 'CANCELLED');
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:3rem; background:white; border-radius:var(--radius-lg); border:1px solid var(--border-color);">No bookings match this filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(b => {
+        const itemsList = b.items.map(i => `<li><strong>${i.quantity}x</strong> ${i.variantTitle}</li>`).join('');
+        const proName = b.professional ? b.professional.name : 'Professional Assigning Soon';
+        const proPhone = b.professional ? (b.professional.phone || 'N/A') : '';
+
+        const payStatus = b.paymentStatus || 'PENDING';
+        const payBadgeClass = payStatus === 'PAID' ? 'status-CONFIRMED' : (payStatus === 'REFUNDED' ? 'status-Cancelled' : 'status-Pending');
+
+        // Status progress calculations
+        const statusOrder = ['CONFIRMED', 'PROFESSIONAL_ASSIGNED', 'ON_THE_WAY', 'SERVICE_STARTED', 'COMPLETED'];
+        const currentIdx = statusOrder.indexOf(b.status);
+
+        let stepperHtml = '';
+        if (b.status !== 'CANCELLED') {
+          stepperHtml = `
+            <div class="timeline-stepper">
+              <div class="step-point ${currentIdx >= 0 ? (currentIdx > 0 ? 'completed' : 'active') : ''}">
+                <div class="step-circle">1</div>
+                <span class="step-label">Confirmed</span>
+              </div>
+              <div class="step-point ${currentIdx >= 1 ? (currentIdx > 1 ? 'completed' : 'active') : ''}">
+                <div class="step-circle">2</div>
+                <span class="step-label">Assigned</span>
+              </div>
+              <div class="step-point ${currentIdx >= 2 ? (currentIdx > 2 ? 'completed' : 'active') : ''}">
+                <div class="step-circle">3</div>
+                <span class="step-label">On The Way</span>
+              </div>
+              <div class="step-point ${currentIdx >= 3 ? (currentIdx > 3 ? 'completed' : 'active') : ''}">
+                <div class="step-circle">4</div>
+                <span class="step-label">In Progress</span>
+              </div>
+              <div class="step-point ${currentIdx >= 4 ? 'completed active' : ''}">
+                <div class="step-circle">5</div>
+                <span class="step-label">Completed</span>
+              </div>
+            </div>
+          `;
+        } else {
+          stepperHtml = `
+            <div style="background:#fef2f2; border:1px solid #fca5a5; padding:0.75rem 1rem; border-radius:var(--radius-md); margin:1rem 0; color:#991b1b; font-size:0.875rem;">
+              <strong>Booking Cancelled:</strong> ${b.cancellationReason || 'Customer requested cancellation'} (${b.cancelledAt ? new Date(b.cancelledAt).toLocaleString() : ''})
+            </div>
+          `;
+        }
+
+        // Actions buttons
+        let actionsHtml = '';
+        if (b.status !== 'COMPLETED' && b.status !== 'CANCELLED') {
+          actionsHtml = `
+            <div class="booking-actions">
+              <button class="btn btn-outline-sm" onclick="openRescheduleModal('${b._id}')">🗓 Reschedule</button>
+              <button class="btn btn-danger" style="padding:0.35rem 0.85rem; font-size:0.85rem;" onclick="handleCancelBooking('${b._id}')">Cancel Booking</button>
+            </div>
+          `;
+        } else if (b.status === 'COMPLETED') {
+          actionsHtml = `
+            <div class="booking-actions">
+              <button class="btn btn-primary-sm" onclick="openReviewModal('${b._id}')">⭐ Rate & Review Service</button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="booking-card">
+            <div class="booking-header">
+              <div>
+                <small style="color:var(--text-light); text-transform:uppercase; font-weight:700;">Booking ID: #${b.bookingNumber || b._id.slice(-6)}</small>
+                <h3 style="font-size:1.15rem; font-weight:700; margin-top:0.2rem;">🗓 Scheduled for ${b.date} (${b.timeSlot})</h3>
+              </div>
+              <div style="text-align:right;">
+                <span class="status-badge status-${b.status}" style="display:inline-block; margin-bottom:0.25rem;">${b.status.replace(/_/g, ' ')}</span><br>
+                <span class="status-badge ${payBadgeClass}">Payment: ${payStatus}</span>
+              </div>
+            </div>
+
+            ${stepperHtml}
+
+            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:1.5rem; font-size:0.9rem;">
+              <div>
+                <strong style="display:block; margin-bottom:0.4rem;">Services Booked:</strong>
+                <ul style="padding-left:1.2rem; color:var(--text-medium);">${itemsList}</ul>
+                <p style="margin-top:0.75rem;"><strong>Address:</strong> ${b.address}</p>
+              </div>
+              <div style="background:var(--bg-light); padding:1rem; border-radius:var(--radius-md);">
+                <strong>Assigned Professional:</strong>
+                <p style="color:var(--text-medium); margin-top:0.25rem;">🧑‍🔧 ${proName}</p>
+                ${proPhone ? `<p style="color:var(--text-medium); font-size:0.85rem;">📞 ${proPhone}</p>` : ''}
+                <div style="border-top:1px solid var(--border-color); margin-top:0.75rem; padding-top:0.5rem; font-weight:800; font-size:1rem;">
+                  Total: ${formatCurrency(b.grandTotal)}
+                </div>
+              </div>
+            </div>
+
+            ${actionsHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Cancel Booking
+    async function handleCancelBooking(bookingId) {
+      const isConfirmed = confirm('Are you sure you want to cancel this booking?');
+      if (!isConfirmed) return;
+
+      try {
+        const res = await apiFetch(`/bookings/${bookingId}/cancel`, { 
+          method: 'PUT',
+          body: JSON.stringify({ cancellationReason: 'Customer requested cancellation' })
+        });
+        
+        if (res.success) {
+          showToast('Booking cancelled successfully.', 'info');
+          await loadBookings();
+        } else {
+          showToast(res.error || 'Failed to cancel booking', 'error');
+        }
+      } catch (err) {
+        showToast('Error cancelling booking', 'error');
+      }
+    }
+
+    // Reschedule Modal
+    function openRescheduleModal(bookingId) {
+      document.getElementById('reschedule-booking-id').value = bookingId;
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('reschedule-date').value = tomorrow.toISOString().split('T')[0];
+      document.getElementById('reschedule-modal').classList.add('active');
+    }
+
+    function closeRescheduleModal() {
+      document.getElementById('reschedule-modal').classList.remove('active');
+    }
+
+    async function handleRescheduleSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('reschedule-booking-id').value;
+      const date = document.getElementById('reschedule-date').value;
+      const timeSlot = document.getElementById('reschedule-time').value;
+
+      try {
+        const res = await apiFetch(`/bookings/${id}/reschedule`, {
+          method: 'PUT',
+          body: JSON.stringify({ date, timeSlot })
+        });
+        if (res.success) {
+          showToast('Booking rescheduled successfully!', 'success');
+          closeRescheduleModal();
+          await loadBookings();
+        } else {
+          showToast(res.error || 'Failed to reschedule', 'error');
+        }
+      } catch (err) {
+        showToast('Error rescheduling booking', 'error');
+      }
+    }
+
+    // Review Modal
+    function openReviewModal(bookingId) {
+      document.getElementById('review-booking-id').value = bookingId;
+      document.getElementById('review-modal').classList.add('active');
+    }
+
+    function closeReviewModal() {
+      document.getElementById('review-modal').classList.remove('active');
+    }
+
+    async function handleReviewSubmit(e) {
+      e.preventDefault();
+      const bookingId = document.getElementById('review-booking-id').value;
+      const rating = document.getElementById('review-rating').value;
+      const comment = document.getElementById('review-comment').value;
+
+      try {
+        const res = await apiFetch('/reviews', {
+          method: 'POST',
+          body: JSON.stringify({ bookingId, rating, comment })
+        });
+        if (res.success) {
+          showToast('Thank you for your rating and review!', 'success');
+          closeReviewModal();
+        } else {
+          showToast(res.error || 'Failed to post review', 'error');
+        }
+      } catch (err) {
+        showToast('Error posting review', 'error');
+      }
+    }
+  </script>
+</body>
+</html>
